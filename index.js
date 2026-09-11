@@ -9,7 +9,7 @@ app.use(
   })
 );
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const referralData = {
   referralCode: "18642076",
   referralLink: "velooprewards.vercel.app/register?ref=18642076",
