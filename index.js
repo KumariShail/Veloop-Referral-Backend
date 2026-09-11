@@ -5,10 +5,12 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://veloop-referral-frontend-mnhs.vercel.app",
+    ],
   })
 );
-
 const PORT = process.env.PORT || 5000;
 const referralData = {
   referralCode: "18642076",
