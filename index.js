@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const { MongoClient } = require("mongodb");
+require("dotenv").config();
 
 const app = express();
 
@@ -14,249 +16,244 @@ app.use(
   })
 );
 
-const PORT = process.env.PORT || 5000;
+// ===============================
+// MongoDB Connection
+// ===============================
 
-// Referral data
-const referralData = {
-  referralCode: "18642076",
-  referralLink: "velooprewards.vercel.app/register?ref=18642076",
+const client = new MongoClient(process.env.MONGODB_URI);
 
-  totalReferrals: 18,
-  successfulReferrals: 14,
-  pendingReferrals: 4,
+let db;
+let referralsCollection;
 
-  adWatchTasksCompleted: 12,
-};
+async function connectDB() {
+  try {
+    await client.connect();
 
-// Referral activity
-const referralActivity = [
-  {
-    id: "ref1",
-    referralId: "Referral #1042",
-    status: "Successful",
-    tasksCompleted: 20,
-    targetTasks: 20,
-  },
-  {
-    id: "ref2",
-    referralId: "Referral #1047",
-    status: "Successful",
-    tasksCompleted: 15,
-    targetTasks: 15,
-  },
-  {
-    id: "ref3",
-    referralId: "Referral #1051",
-    status: "Pending",
-    tasksCompleted: 8,
-    targetTasks: 15,
-  },
-  {
-    id: "ref4",
-    referralId: "Referral #1058",
-    status: "Pending",
-    tasksCompleted: 3,
-    targetTasks: 15,
-  },
-];
+    db = client.db("veloop");
+    referralsCollection = db.collection("referrals");
 
-// Referral rewards
-const referralRewards = [
-  {
-    id: "r1",
-    title: "5000 SVE",
-    subtitle: "≈ ₹10",
-    condition: "Friend completes 15 Ad Watch tasks",
-    requiredTasks: 15,
-  },
-  {
-    id: "r2",
-    title: "2 Lucky Spins",
-    subtitle: null,
-    condition: "Friend completes 20 Ad Watch tasks",
-    requiredTasks: 20,
-  },
-  {
-    id: "r3",
-    title: "5000 Tokens",
-    subtitle: null,
-    condition: "Friend completes 30 Ad Watch tasks",
-    requiredTasks: 30,
-  },
-  {
-    id: "r4",
-    title: "10 Gems",
-    subtitle: null,
-    condition: "Friend completes 35 Ad Watch tasks",
-    requiredTasks: 35,
-  },
-  {
-    id: "r5",
-    title: "+20 XP",
-    subtitle: null,
-    condition: "Awarded for every successful referral",
-    requiredTasks: 0,
-  },
-];
-
-// Calculate referral progress
-function calculateReferralProgress(current, rewards) {
-  const milestoneRewards = rewards
-    .filter((reward) => reward.requiredTasks > 0)
-    .sort((a, b) => a.requiredTasks - b.requiredTasks);
-
-  const nextReward = milestoneRewards.find(
-    (reward) => current < reward.requiredTasks
-  );
-
-  const milestoneComplete = !nextReward;
-
-  const target = nextReward ? nextReward.requiredTasks : current;
-
-  const remaining = nextReward
-    ? Math.max(target - current, 0)
-    : 0;
-
-  const percent = nextReward
-    ? Math.min(Math.round((current / target) * 100), 100)
-    : 100;
-
-  return {
-    current,
-    target,
-    remaining,
-    percent,
-    milestoneComplete,
-    nextReward: nextReward
-      ? nextReward.title
-      : "Milestone Complete",
-  };
+    console.log("MongoDB connected successfully!");
+  } catch (error) {
+    console.error("MongoDB connection failed:", error);
+  }
 }
 
-const current = referralData.adWatchTasksCompleted;
+connectDB();
 
-const referralProgress = calculateReferralProgress(
-  current,
-  referralRewards
-);
 
-// Home route
-app.get("/", (req, res) => {
-  res.send("VELOOP Backend is running!");
-});
+// ===============================
+// Existing Referral Data
+// ===============================
 
-// Summary route
-app.get("/api/referrals/summary", (req, res) => {
-  const successRate = Math.round(
-    (referralData.successfulReferrals /
-      referralData.totalReferrals) *
-      100
-  );
+const referralData = {
+  referralCode: "18642076",
+  referralLink: "https://veloop.com/referral/18642076",
+};
 
-  res.json({
-    totalReferrals: referralData.totalReferrals,
-    successfulReferrals: referralData.successfulReferrals,
-    pendingReferrals: referralData.pendingReferrals,
-    successRate,
-  });
-});
 
-// Add new referral
-app.post("/api/referrals", (req, res) => {
-  const newReferral = req.body;
+// ===============================
+// Referral Progress
+// ===============================
 
-  console.log(newReferral);
+const referralProgress = {
+  current: 12,
+  target: 15,
+  remaining: 3,
+  percentage: 80,
+  nextReward: 5000,
+};
 
-  referralActivity.push(newReferral);
 
-  referralData.totalReferrals += 1;
+// ===============================
+// Rewards
+// ===============================
 
-  if (newReferral.status === "Pending") {
-    referralData.pendingReferrals += 1;
-  } else if (newReferral.status === "Successful") {
-    referralData.successfulReferrals += 1;
-  }
+const referralRewards = [
+  {
+    milestone: 5,
+    reward: 1000,
+    status: "Completed",
+  },
+  {
+    milestone: 10,
+    reward: 2500,
+    status: "Completed",
+  },
+  {
+    milestone: 15,
+    reward: 5000,
+    status: "In Progress",
+  },
+];
 
-  res.json(newReferral);
-});
 
-// Get referral data
-app.get("/api/referrals/me", (req, res) => {
-  res.json({
-    referralCode: referralData.referralCode,
-    referralLink: referralData.referralLink,
+// ===============================
+// GET - All Referral Data
+// ===============================
 
-    totalReferrals: referralData.totalReferrals,
-    successfulReferrals: referralData.successfulReferrals,
-    pendingReferrals: referralData.pendingReferrals,
+app.get("/api/referrals/me", async (req, res) => {
+  try {
+    const referrals = await referralsCollection.find({}).toArray();
 
-    referralProgress,
+    res.json({
+      referralCode: referralData.referralCode,
 
-    rewards: referralRewards,
-    referralActivity,
-  });
-});
+      referralLink: referralData.referralLink,
 
-// Update referral status
-app.patch("/api/referrals/:id", (req, res) => {
-  const referralId = req.params.id;
-  const newStatus = req.body.status;
+      totalReferrals: referrals.length,
 
-  const referral = referralActivity.find(
-    (item) => item.referralId === referralId
-  );
-  if (newStatus !== "Pending" && newStatus !== "Successful") {
-  return res.status(400).json({
-    message: "Invalid status. Use Pending or Successful.",
-  });
-  }
-  if (!referral) {
-    return res.status(404).json({
-      message: "Referral not found",
+      successfulReferrals: referrals.filter(
+        (item) => item.status === "Successful"
+      ).length,
+
+      pendingReferrals: referrals.filter(
+        (item) => item.status === "Pending"
+      ).length,
+
+      referralProgress: referralProgress,
+
+      rewards: referralRewards,
+
+      referralActivity: referrals,
+    });
+  } catch (error) {
+    console.error("Error fetching referrals:", error);
+
+    res.status(500).json({
+      message: "Failed to fetch referrals",
     });
   }
-
-  if (referral.status === "Pending" && newStatus === "Successful") {
-    referralData.pendingReferrals -= 1;
-    referralData.successfulReferrals += 1;
-  }
-
-  referral.status = newStatus;
-
-  res.json(referral);
 });
-app.delete("/api/referrals/:id", (req, res) => {
-  const referralId = req.params.id;
 
-  const index = referralActivity.findIndex(
-    (item) => item.referralId === referralId
-  );
 
-  if (index === -1) {
-    return res.status(404).json({
-      message: "Referral not found",
+// ===============================
+// POST - Create Referral
+// ===============================
+
+app.post("/api/referrals", async (req, res) => {
+  try {
+    const newReferral = req.body;
+
+    const result = await referralsCollection.insertOne(newReferral);
+
+    res.status(201).json({
+      message: "Referral added successfully",
+
+      referral: {
+        ...newReferral,
+        _id: result.insertedId,
+      },
+    });
+  } catch (error) {
+    console.error("Error adding referral:", error);
+
+    res.status(500).json({
+      message: "Failed to add referral",
     });
   }
-
-  const deletedReferral = referralActivity[index];
-
-  referralActivity.splice(index, 1);
-
-  referralData.totalReferrals -= 1;
-
-  if (deletedReferral.status === "Pending") {
-    referralData.pendingReferrals -= 1;
-  } else if (deletedReferral.status === "Successful") {
-    referralData.successfulReferrals -= 1;
-  }
-
-  res.json({
-    message: "Referral deleted successfully",
-    deletedReferral,
-  });
 });
 
-// Start server
+
+// ===============================
+// PATCH - Update Referral Status
+// ===============================
+
+app.patch("/api/referrals/:id", async (req, res) => {
+  try {
+    const referralId = req.params.id;
+    const newStatus = req.body.status;
+
+    // Check valid status
+    if (newStatus !== "Pending" && newStatus !== "Successful") {
+      return res.status(400).json({
+        message: "Invalid status. Use Pending or Successful.",
+      });
+    }
+
+    // Find referral
+    const referral = await referralsCollection.findOne({
+      referralId: referralId,
+    });
+
+    if (!referral) {
+      return res.status(404).json({
+        message: "Referral not found",
+      });
+    }
+
+    // Update MongoDB
+    await referralsCollection.updateOne(
+      {
+        referralId: referralId,
+      },
+      {
+        $set: {
+          status: newStatus,
+        },
+      }
+    );
+
+    // Return updated referral
+    const updatedReferral = {
+      ...referral,
+      status: newStatus,
+    };
+
+    res.json(updatedReferral);
+  } catch (error) {
+    console.error("Error updating referral:", error);
+
+    res.status(500).json({
+      message: "Failed to update referral",
+    });
+  }
+});
+
+
+// ===============================
+// DELETE - Delete Referral
+// ===============================
+
+app.delete("/api/referrals/:id", async (req, res) => {
+  try {
+    const referralId = req.params.id;
+
+    // Find referral first
+    const referral = await referralsCollection.findOne({
+      referralId: referralId,
+    });
+
+    if (!referral) {
+      return res.status(404).json({
+        message: "Referral not found",
+      });
+    }
+
+    // Delete from MongoDB
+    await referralsCollection.deleteOne({
+      referralId: referralId,
+    });
+
+    res.json({
+      message: "Referral deleted successfully",
+      deletedReferral: referral,
+    });
+  } catch (error) {
+    console.error("Error deleting referral:", error);
+
+    res.status(500).json({
+      message: "Failed to delete referral",
+    });
+  }
+});
+
+
+// ===============================
+// Server
+// ===============================
+
+const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
