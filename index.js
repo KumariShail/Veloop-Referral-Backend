@@ -59,7 +59,7 @@ const referralProgress = {
   current: 12,
   target: 15,
   remaining: 3,
-  percentage: 80,
+  percent: 80,
   nextReward: 5000,
 };
 
@@ -67,25 +67,29 @@ const referralProgress = {
 // ===============================
 // Rewards
 // ===============================
-
-const referralRewards = [
+  const referralRewards = [
   {
-    milestone: 5,
-    reward: 1000,
-    status: "Completed",
+    id: "reward-1",
+    title: "₹1000 Reward",
+    subtitle: "First Milestone",
+    condition: "Complete 5 Ad Watch tasks",
+    requiredTasks: 5,
   },
   {
-    milestone: 10,
-    reward: 2500,
-    status: "Completed",
+    id: "reward-2",
+    title: "₹2500 Reward",
+    subtitle: "Second Milestone",
+    condition: "Complete 10 Ad Watch tasks",
+    requiredTasks: 10,
   },
   {
-    milestone: 15,
-    reward: 5000,
-    status: "In Progress",
+    id: "reward-3",
+    title: "₹5000 Reward",
+    subtitle: "Next Milestone",
+    condition: "Complete 15 Ad Watch tasks",
+    requiredTasks: 15,
   },
 ];
-
 
 // ===============================
 // GET - All Referral Data
