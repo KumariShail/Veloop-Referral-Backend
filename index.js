@@ -38,7 +38,7 @@ async function connectDB() {
   }
 }
 
-connectDB();
+
 
 
 // ===============================
@@ -136,13 +136,70 @@ app.get("/api/referrals/me", async (req, res) => {
 
 app.post("/api/referrals", async (req, res) => {
   try {
-    const newReferral = req.body;
+    const {
+      referralId,
+      id,
+      status,
+      tasksCompleted,
+      targetTasks,
+    } = req.body;
 
+    // Check required fields
+    if (
+      !referralId ||
+      !id ||
+      !status ||
+      tasksCompleted === undefined ||
+      targetTasks === undefined
+    ) {
+      return res.status(400).json({
+        message: "All referral fields are required",
+      });
+    }
+
+    // Check valid status
+    if (status !== "Pending" && status !== "Successful") {
+      return res.status(400).json({
+        message: "Invalid status. Use Pending or Successful.",
+      });
+    }
+
+    // Check task values
+    if (
+      typeof tasksCompleted !== "number" ||
+      typeof targetTasks !== "number"
+    ) {
+      return res.status(400).json({
+        message: "tasksCompleted and targetTasks must be numbers",
+      });
+    }
+
+    // Check if referral already exists
+    const existingReferral = await referralsCollection.findOne({
+      referralId: referralId,
+    });
+
+    if (existingReferral) {
+      return res.status(409).json({
+        message: "Referral already exists",
+      });
+    }
+
+    // Create new referral object
+    const newReferral = {
+      referralId,
+      id,
+      status,
+      tasksCompleted,
+      targetTasks,
+    };
+
+    // Insert into MongoDB
     const result = await referralsCollection.insertOne(newReferral);
 
+    // Send successful response
     res.status(201).json({
       message: "Referral added successfully",
-
       referral: {
         ...newReferral,
         _id: result.insertedId,
@@ -258,6 +315,12 @@ app.delete("/api/referrals/:id", async (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+async function startServer() {
+  await connectDB();
+
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}
+
+startServer();
