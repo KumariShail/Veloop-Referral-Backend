@@ -1,0 +1,212 @@
+[
+  {
+    "id": "column.public.user.gemBalance",
+    "label": "Add column \"gemBalance\" to \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "gemBalance",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"gemBalance\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "gemBalance"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"gemBalance\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD COLUMN \"gemBalance\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"gemBalance\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "gemBalance"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.user.spinBalance",
+    "label": "Add column \"spinBalance\" to \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "spinBalance",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"spinBalance\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "spinBalance"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"spinBalance\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD COLUMN \"spinBalance\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"spinBalance\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "spinBalance"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.user.sveBalance",
+    "label": "Add column \"sveBalance\" to \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "sveBalance",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"sveBalance\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "sveBalance"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"sveBalance\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD COLUMN \"sveBalance\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"sveBalance\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "sveBalance"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.user.tokenBalance",
+    "label": "Add column \"tokenBalance\" to \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "tokenBalance",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"tokenBalance\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "tokenBalance"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"tokenBalance\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD COLUMN \"tokenBalance\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"tokenBalance\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "tokenBalance"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.user.xp",
+    "label": "Add column \"xp\" to \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "xp",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"xp\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "xp"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"xp\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD COLUMN \"xp\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"xp\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "xp"
+        ]
+      }
+    ]
+  }
+]

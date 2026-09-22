@@ -1,0 +1,1516 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.adEvent",
+    "label": "Create table \"adEvent\"",
+    "summary": "Creates table \"adEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "adEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"adEvent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"adEvent\"",
+        "sql": "CREATE TABLE \"public\".\"adEvent\" (\n  \"adProvider\" text NOT NULL,\n  \"completedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"eventType\" text NOT NULL,\n  \"externalEventId\" text NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"referralId\" int4,\n  \"userId\" int4 NOT NULL,\n  \"verified\" bool DEFAULT false NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"adEvent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.auditLog",
+    "label": "Create table \"auditLog\"",
+    "summary": "Creates table \"auditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "auditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"auditLog\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditLog\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"auditLog\"",
+        "sql": "CREATE TABLE \"public\".\"auditLog\" (\n  \"action\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"details\" text,\n  \"id\" SERIAL NOT NULL,\n  \"referralId\" int4,\n  \"status\" text NOT NULL,\n  \"userId\" int4,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"auditLog\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditLog\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.referral",
+    "label": "Create table \"referral\"",
+    "summary": "Creates table \"referral\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "referral"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"referral\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"referral\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"referral\"",
+        "sql": "CREATE TABLE \"public\".\"referral\" (\n  \"attributedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"referralCode\" text NOT NULL,\n  \"referredUserId\" int4 NOT NULL,\n  \"referrerId\" int4 NOT NULL,\n  \"registeredAt\" timestamptz,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"successfulAt\" timestamptz,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"referral\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"referral\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.referralProgress",
+    "label": "Create table \"referralProgress\"",
+    "summary": "Creates table \"referralProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "referralProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"referralProgress\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"referralProgress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"referralProgress\"",
+        "sql": "CREATE TABLE \"public\".\"referralProgress\" (\n  \"adsCompleted\" int4 DEFAULT 0 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"currentMilestone\" int4 DEFAULT 0 NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"referralId\" int4 NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"referralProgress\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"referralProgress\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.rewardConfig",
+    "label": "Create table \"rewardConfig\"",
+    "summary": "Creates table \"rewardConfig\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "rewardConfig"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"rewardConfig\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rewardConfig\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"rewardConfig\"",
+        "sql": "CREATE TABLE \"public\".\"rewardConfig\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"isActive\" bool DEFAULT true NOT NULL,\n  \"milestone\" int4 NOT NULL,\n  \"rewardAmount\" int4 NOT NULL,\n  \"rewardType\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"rewardConfig\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rewardConfig\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.rewardTransaction",
+    "label": "Create table \"rewardTransaction\"",
+    "summary": "Creates table \"rewardTransaction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "rewardTransaction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"rewardTransaction\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rewardTransaction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"rewardTransaction\"",
+        "sql": "CREATE TABLE \"public\".\"rewardTransaction\" (\n  \"amount\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"idempotencyKey\" text NOT NULL,\n  \"milestone\" int4,\n  \"reason\" text NOT NULL,\n  \"referralId\" int4,\n  \"rewardType\" text NOT NULL,\n  \"status\" text DEFAULT 'CREDITED' NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"rewardTransaction\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rewardTransaction\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user",
+    "label": "Create table \"user\"",
+    "summary": "Creates table \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user\"",
+        "sql": "CREATE TABLE \"public\".\"user\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"deviceHash\" text,\n  \"email\" text NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"name\" text,\n  \"referralCode\" text NOT NULL,\n  \"referredByUserId\" int4,\n  \"status\" text DEFAULT 'ACTIVE' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.adEvent.adEvent_externalEventId_key",
+    "label": "Add unique constraint on \"adEvent\" (externalEventId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "adEvent_externalEventId_key",
+        "table": "adEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"adEvent_externalEventId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adEvent_externalEventId_key",
+          "public",
+          "\"public\".\"adEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"adEvent_externalEventId_key\"",
+        "sql": "ALTER TABLE \"public\".\"adEvent\" ADD CONSTRAINT \"adEvent_externalEventId_key\" UNIQUE (\"externalEventId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"adEvent_externalEventId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adEvent_externalEventId_key",
+          "public",
+          "\"public\".\"adEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.referral.referral_referredUserId_key",
+    "label": "Add unique constraint on \"referral\" (referredUserId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "referral_referredUserId_key",
+        "table": "referral"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"referral_referredUserId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referral_referredUserId_key",
+          "public",
+          "\"public\".\"referral\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"referral_referredUserId_key\"",
+        "sql": "ALTER TABLE \"public\".\"referral\" ADD CONSTRAINT \"referral_referredUserId_key\" UNIQUE (\"referredUserId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"referral_referredUserId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referral_referredUserId_key",
+          "public",
+          "\"public\".\"referral\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.referralProgress.referralProgress_referralId_key",
+    "label": "Add unique constraint on \"referralProgress\" (referralId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "referralProgress_referralId_key",
+        "table": "referralProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"referralProgress_referralId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referralProgress_referralId_key",
+          "public",
+          "\"public\".\"referralProgress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"referralProgress_referralId_key\"",
+        "sql": "ALTER TABLE \"public\".\"referralProgress\" ADD CONSTRAINT \"referralProgress_referralId_key\" UNIQUE (\"referralId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"referralProgress_referralId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referralProgress_referralId_key",
+          "public",
+          "\"public\".\"referralProgress\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.rewardConfig.rewardConfig_milestone_key",
+    "label": "Add unique constraint on \"rewardConfig\" (milestone)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "rewardConfig_milestone_key",
+        "table": "rewardConfig"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"rewardConfig_milestone_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rewardConfig_milestone_key",
+          "public",
+          "\"public\".\"rewardConfig\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"rewardConfig_milestone_key\"",
+        "sql": "ALTER TABLE \"public\".\"rewardConfig\" ADD CONSTRAINT \"rewardConfig_milestone_key\" UNIQUE (\"milestone\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"rewardConfig_milestone_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rewardConfig_milestone_key",
+          "public",
+          "\"public\".\"rewardConfig\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.rewardTransaction.rewardTransaction_idempotencyKey_key",
+    "label": "Add unique constraint on \"rewardTransaction\" (idempotencyKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "rewardTransaction_idempotencyKey_key",
+        "table": "rewardTransaction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"rewardTransaction_idempotencyKey_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rewardTransaction_idempotencyKey_key",
+          "public",
+          "\"public\".\"rewardTransaction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"rewardTransaction_idempotencyKey_key\"",
+        "sql": "ALTER TABLE \"public\".\"rewardTransaction\" ADD CONSTRAINT \"rewardTransaction_idempotencyKey_key\" UNIQUE (\"idempotencyKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"rewardTransaction_idempotencyKey_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rewardTransaction_idempotencyKey_key",
+          "public",
+          "\"public\".\"rewardTransaction\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.user.user_email_key",
+    "label": "Add unique constraint on \"user\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "user_email_key",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"user_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_email_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"user_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD CONSTRAINT \"user_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"user_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_email_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.user.user_referralCode_key",
+    "label": "Add unique constraint on \"user\" (referralCode)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "user_referralCode_key",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"user_referralCode_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_referralCode_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"user_referralCode_key\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD CONSTRAINT \"user_referralCode_key\" UNIQUE (\"referralCode\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"user_referralCode_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_referralCode_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adEvent.adEvent_referralId_idx_613afdc8",
+    "label": "Create index \"adEvent_referralId_idx_613afdc8\" on \"adEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adEvent_referralId_idx_613afdc8",
+        "table": "adEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adEvent_referralId_idx_613afdc8\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adEvent_referralId_idx_613afdc8\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adEvent_referralId_idx_613afdc8\"",
+        "sql": "CREATE INDEX \"adEvent_referralId_idx_613afdc8\" ON \"public\".\"adEvent\" (\"referralId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adEvent_referralId_idx_613afdc8\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adEvent_referralId_idx_613afdc8\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adEvent.adEvent_userId_idx_a489d58a",
+    "label": "Create index \"adEvent_userId_idx_a489d58a\" on \"adEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adEvent_userId_idx_a489d58a",
+        "table": "adEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adEvent_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adEvent_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adEvent_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"adEvent_userId_idx_a489d58a\" ON \"public\".\"adEvent\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adEvent_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adEvent_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.auditLog.auditLog_action_idx_cd0d2116",
+    "label": "Create index \"auditLog_action_idx_cd0d2116\" on \"auditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "auditLog_action_idx_cd0d2116",
+        "table": "auditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"auditLog_action_idx_cd0d2116\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditLog_action_idx_cd0d2116\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"auditLog_action_idx_cd0d2116\"",
+        "sql": "CREATE INDEX \"auditLog_action_idx_cd0d2116\" ON \"public\".\"auditLog\" (\"action\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"auditLog_action_idx_cd0d2116\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditLog_action_idx_cd0d2116\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.auditLog.auditLog_referralId_idx_613afdc8",
+    "label": "Create index \"auditLog_referralId_idx_613afdc8\" on \"auditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "auditLog_referralId_idx_613afdc8",
+        "table": "auditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"auditLog_referralId_idx_613afdc8\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditLog_referralId_idx_613afdc8\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"auditLog_referralId_idx_613afdc8\"",
+        "sql": "CREATE INDEX \"auditLog_referralId_idx_613afdc8\" ON \"public\".\"auditLog\" (\"referralId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"auditLog_referralId_idx_613afdc8\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditLog_referralId_idx_613afdc8\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.auditLog.auditLog_userId_idx_a489d58a",
+    "label": "Create index \"auditLog_userId_idx_a489d58a\" on \"auditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "auditLog_userId_idx_a489d58a",
+        "table": "auditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"auditLog_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditLog_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"auditLog_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"auditLog_userId_idx_a489d58a\" ON \"public\".\"auditLog\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"auditLog_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditLog_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.referral.referral_referrerId_idx_cac6d89f",
+    "label": "Create index \"referral_referrerId_idx_cac6d89f\" on \"referral\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "referral_referrerId_idx_cac6d89f",
+        "table": "referral"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"referral_referrerId_idx_cac6d89f\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"referral_referrerId_idx_cac6d89f\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"referral_referrerId_idx_cac6d89f\"",
+        "sql": "CREATE INDEX \"referral_referrerId_idx_cac6d89f\" ON \"public\".\"referral\" (\"referrerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"referral_referrerId_idx_cac6d89f\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"referral_referrerId_idx_cac6d89f\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.referral.referral_status_idx_e98638ab",
+    "label": "Create index \"referral_status_idx_e98638ab\" on \"referral\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "referral_status_idx_e98638ab",
+        "table": "referral"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"referral_status_idx_e98638ab\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"referral_status_idx_e98638ab\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"referral_status_idx_e98638ab\"",
+        "sql": "CREATE INDEX \"referral_status_idx_e98638ab\" ON \"public\".\"referral\" (\"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"referral_status_idx_e98638ab\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"referral_status_idx_e98638ab\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.referralProgress.referralProgress_userId_idx_a489d58a",
+    "label": "Create index \"referralProgress_userId_idx_a489d58a\" on \"referralProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "referralProgress_userId_idx_a489d58a",
+        "table": "referralProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"referralProgress_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"referralProgress_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"referralProgress_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"referralProgress_userId_idx_a489d58a\" ON \"public\".\"referralProgress\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"referralProgress_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"referralProgress_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.rewardTransaction.rewardTransaction_referralId_idx_613afdc8",
+    "label": "Create index \"rewardTransaction_referralId_idx_613afdc8\" on \"rewardTransaction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "rewardTransaction_referralId_idx_613afdc8",
+        "table": "rewardTransaction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"rewardTransaction_referralId_idx_613afdc8\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rewardTransaction_referralId_idx_613afdc8\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"rewardTransaction_referralId_idx_613afdc8\"",
+        "sql": "CREATE INDEX \"rewardTransaction_referralId_idx_613afdc8\" ON \"public\".\"rewardTransaction\" (\"referralId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"rewardTransaction_referralId_idx_613afdc8\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rewardTransaction_referralId_idx_613afdc8\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.rewardTransaction.rewardTransaction_rewardType_idx_b7fb0b97",
+    "label": "Create index \"rewardTransaction_rewardType_idx_b7fb0b97\" on \"rewardTransaction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "rewardTransaction_rewardType_idx_b7fb0b97",
+        "table": "rewardTransaction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"rewardTransaction_rewardType_idx_b7fb0b97\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rewardTransaction_rewardType_idx_b7fb0b97\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"rewardTransaction_rewardType_idx_b7fb0b97\"",
+        "sql": "CREATE INDEX \"rewardTransaction_rewardType_idx_b7fb0b97\" ON \"public\".\"rewardTransaction\" (\"rewardType\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"rewardTransaction_rewardType_idx_b7fb0b97\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rewardTransaction_rewardType_idx_b7fb0b97\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.rewardTransaction.rewardTransaction_userId_idx_a489d58a",
+    "label": "Create index \"rewardTransaction_userId_idx_a489d58a\" on \"rewardTransaction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "rewardTransaction_userId_idx_a489d58a",
+        "table": "rewardTransaction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"rewardTransaction_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rewardTransaction_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"rewardTransaction_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"rewardTransaction_userId_idx_a489d58a\" ON \"public\".\"rewardTransaction\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"rewardTransaction_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rewardTransaction_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user.user_referredByUserId_idx_f4e8dcf0",
+    "label": "Create index \"user_referredByUserId_idx_f4e8dcf0\" on \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "user_referredByUserId_idx_f4e8dcf0",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_referredByUserId_idx_f4e8dcf0\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_referredByUserId_idx_f4e8dcf0\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_referredByUserId_idx_f4e8dcf0\"",
+        "sql": "CREATE INDEX \"user_referredByUserId_idx_f4e8dcf0\" ON \"public\".\"user\" (\"referredByUserId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_referredByUserId_idx_f4e8dcf0\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user_referredByUserId_idx_f4e8dcf0\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.adEvent.adEvent_userId_fkey",
+    "label": "Add foreign key \"adEvent_userId_fkey\" on \"adEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "adEvent_userId_fkey",
+        "table": "adEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"adEvent_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adEvent_userId_fkey",
+          "public",
+          "\"public\".\"adEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"adEvent_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"adEvent\"\nADD CONSTRAINT \"adEvent_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"adEvent_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adEvent_userId_fkey",
+          "public",
+          "\"public\".\"adEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.adEvent.adEvent_referralId_fkey",
+    "label": "Add foreign key \"adEvent_referralId_fkey\" on \"adEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "adEvent_referralId_fkey",
+        "table": "adEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"adEvent_referralId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adEvent_referralId_fkey",
+          "public",
+          "\"public\".\"adEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"adEvent_referralId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"adEvent\"\nADD CONSTRAINT \"adEvent_referralId_fkey\"\nFOREIGN KEY (\"referralId\")\nREFERENCES \"public\".\"referral\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"adEvent_referralId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adEvent_referralId_fkey",
+          "public",
+          "\"public\".\"adEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.auditLog.auditLog_userId_fkey",
+    "label": "Add foreign key \"auditLog_userId_fkey\" on \"auditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "auditLog_userId_fkey",
+        "table": "auditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"auditLog_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "auditLog_userId_fkey",
+          "public",
+          "\"public\".\"auditLog\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"auditLog_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"auditLog\"\nADD CONSTRAINT \"auditLog_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"auditLog_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "auditLog_userId_fkey",
+          "public",
+          "\"public\".\"auditLog\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.auditLog.auditLog_referralId_fkey",
+    "label": "Add foreign key \"auditLog_referralId_fkey\" on \"auditLog\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "auditLog_referralId_fkey",
+        "table": "auditLog"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"auditLog_referralId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "auditLog_referralId_fkey",
+          "public",
+          "\"public\".\"auditLog\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"auditLog_referralId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"auditLog\"\nADD CONSTRAINT \"auditLog_referralId_fkey\"\nFOREIGN KEY (\"referralId\")\nREFERENCES \"public\".\"referral\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"auditLog_referralId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "auditLog_referralId_fkey",
+          "public",
+          "\"public\".\"auditLog\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.referral.referral_referrerId_fkey",
+    "label": "Add foreign key \"referral_referrerId_fkey\" on \"referral\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "referral_referrerId_fkey",
+        "table": "referral"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"referral_referrerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referral_referrerId_fkey",
+          "public",
+          "\"public\".\"referral\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"referral_referrerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"referral\"\nADD CONSTRAINT \"referral_referrerId_fkey\"\nFOREIGN KEY (\"referrerId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"referral_referrerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referral_referrerId_fkey",
+          "public",
+          "\"public\".\"referral\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.referral.referral_referredUserId_fkey",
+    "label": "Add foreign key \"referral_referredUserId_fkey\" on \"referral\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "referral_referredUserId_fkey",
+        "table": "referral"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"referral_referredUserId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referral_referredUserId_fkey",
+          "public",
+          "\"public\".\"referral\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"referral_referredUserId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"referral\"\nADD CONSTRAINT \"referral_referredUserId_fkey\"\nFOREIGN KEY (\"referredUserId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"referral_referredUserId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referral_referredUserId_fkey",
+          "public",
+          "\"public\".\"referral\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.referralProgress.referralProgress_userId_fkey",
+    "label": "Add foreign key \"referralProgress_userId_fkey\" on \"referralProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "referralProgress_userId_fkey",
+        "table": "referralProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"referralProgress_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referralProgress_userId_fkey",
+          "public",
+          "\"public\".\"referralProgress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"referralProgress_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"referralProgress\"\nADD CONSTRAINT \"referralProgress_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"referralProgress_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referralProgress_userId_fkey",
+          "public",
+          "\"public\".\"referralProgress\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.referralProgress.referralProgress_referralId_fkey",
+    "label": "Add foreign key \"referralProgress_referralId_fkey\" on \"referralProgress\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "referralProgress_referralId_fkey",
+        "table": "referralProgress"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"referralProgress_referralId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referralProgress_referralId_fkey",
+          "public",
+          "\"public\".\"referralProgress\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"referralProgress_referralId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"referralProgress\"\nADD CONSTRAINT \"referralProgress_referralId_fkey\"\nFOREIGN KEY (\"referralId\")\nREFERENCES \"public\".\"referral\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"referralProgress_referralId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "referralProgress_referralId_fkey",
+          "public",
+          "\"public\".\"referralProgress\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.rewardTransaction.rewardTransaction_userId_fkey",
+    "label": "Add foreign key \"rewardTransaction_userId_fkey\" on \"rewardTransaction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "rewardTransaction_userId_fkey",
+        "table": "rewardTransaction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"rewardTransaction_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rewardTransaction_userId_fkey",
+          "public",
+          "\"public\".\"rewardTransaction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"rewardTransaction_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"rewardTransaction\"\nADD CONSTRAINT \"rewardTransaction_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"rewardTransaction_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rewardTransaction_userId_fkey",
+          "public",
+          "\"public\".\"rewardTransaction\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.rewardTransaction.rewardTransaction_referralId_fkey",
+    "label": "Add foreign key \"rewardTransaction_referralId_fkey\" on \"rewardTransaction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "rewardTransaction_referralId_fkey",
+        "table": "rewardTransaction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"rewardTransaction_referralId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rewardTransaction_referralId_fkey",
+          "public",
+          "\"public\".\"rewardTransaction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"rewardTransaction_referralId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"rewardTransaction\"\nADD CONSTRAINT \"rewardTransaction_referralId_fkey\"\nFOREIGN KEY (\"referralId\")\nREFERENCES \"public\".\"referral\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"rewardTransaction_referralId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rewardTransaction_referralId_fkey",
+          "public",
+          "\"public\".\"rewardTransaction\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.user.user_referredByUserId_fkey",
+    "label": "Add foreign key \"user_referredByUserId_fkey\" on \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "user_referredByUserId_fkey",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"user_referredByUserId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_referredByUserId_fkey",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"user_referredByUserId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"user\"\nADD CONSTRAINT \"user_referredByUserId_fkey\"\nFOREIGN KEY (\"referredByUserId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"user_referredByUserId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_referredByUserId_fkey",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  }
+]

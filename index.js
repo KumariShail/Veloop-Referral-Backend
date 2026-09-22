@@ -3,7 +3,17 @@ const cors = require("cors");
 const { MongoClient } = require("mongodb");
 require("dotenv").config();
 
+const referralRoutes = require("./routes/referralRoutes");
+const adEventRoutes = require("./routes/adEventRoutes");
+const rewardRoutes = require("./routes/rewardRoutes");
+const authRoutes = require("./routes/authRoutes");
+const { apiRateLimiter } = require("./middleware/rateLimitMiddleware");
+
 const app = express();
+
+// ===============================
+// Middleware
+// ===============================
 
 app.use(express.json());
 
@@ -15,6 +25,18 @@ app.use(
     ],
   })
 );
+
+// Rate limiting
+app.use(apiRateLimiter);
+
+// ===============================
+// New PostgreSQL / Prisma Routes
+// ===============================
+
+app.use("/api/auth", authRoutes);
+app.use("/api/referrals", referralRoutes);
+app.use("/api/ad-events", adEventRoutes);
+app.use("/api/rewards", rewardRoutes);
 
 // ===============================
 // MongoDB Connection
@@ -35,11 +57,9 @@ async function connectDB() {
     console.log("MongoDB connected successfully!");
   } catch (error) {
     console.error("MongoDB connection failed:", error);
+    throw error;
   }
 }
-
-
-
 
 // ===============================
 // Existing Referral Data
@@ -49,7 +69,6 @@ const referralData = {
   referralCode: "18642076",
   referralLink: "https://veloop.com/referral/18642076",
 };
-
 
 // ===============================
 // Referral Progress
@@ -63,11 +82,11 @@ const referralProgress = {
   nextReward: 5000,
 };
 
-
 // ===============================
 // Rewards
 // ===============================
-  const referralRewards = [
+
+const referralRewards = [
   {
     id: "reward-1",
     title: "₹1000 Reward",
@@ -92,16 +111,16 @@ const referralProgress = {
 ];
 
 // ===============================
-// GET - All Referral Data
+// LEGACY MONGODB ROUTES
 // ===============================
 
+// GET - All Referral Data
 app.get("/api/referrals/me", async (req, res) => {
   try {
     const referrals = await referralsCollection.find({}).toArray();
 
     res.json({
       referralCode: referralData.referralCode,
-
       referralLink: referralData.referralLink,
 
       totalReferrals: referrals.length,
@@ -129,11 +148,7 @@ app.get("/api/referrals/me", async (req, res) => {
   }
 });
 
-
-// ===============================
 // POST - Create Referral
-// ===============================
-
 app.post("/api/referrals", async (req, res) => {
   try {
     const {
@@ -144,7 +159,6 @@ app.post("/api/referrals", async (req, res) => {
       targetTasks,
     } = req.body;
 
-    // Check required fields
     if (
       !referralId ||
       !id ||
@@ -157,14 +171,12 @@ app.post("/api/referrals", async (req, res) => {
       });
     }
 
-    // Check valid status
     if (status !== "Pending" && status !== "Successful") {
       return res.status(400).json({
         message: "Invalid status. Use Pending or Successful.",
       });
     }
 
-    // Check task values
     if (
       typeof tasksCompleted !== "number" ||
       typeof targetTasks !== "number"
@@ -174,7 +186,6 @@ app.post("/api/referrals", async (req, res) => {
       });
     }
 
-    // Check if referral already exists
     const existingReferral = await referralsCollection.findOne({
       referralId: referralId,
     });
@@ -185,7 +196,6 @@ app.post("/api/referrals", async (req, res) => {
       });
     }
 
-    // Create new referral object
     const newReferral = {
       referralId,
       id,
@@ -194,10 +204,8 @@ app.post("/api/referrals", async (req, res) => {
       targetTasks,
     };
 
-    // Insert into MongoDB
     const result = await referralsCollection.insertOne(newReferral);
 
-    // Send successful response
     res.status(201).json({
       message: "Referral added successfully",
       referral: {
@@ -214,24 +222,18 @@ app.post("/api/referrals", async (req, res) => {
   }
 });
 
-
-// ===============================
 // PATCH - Update Referral Status
-// ===============================
-
 app.patch("/api/referrals/:id", async (req, res) => {
   try {
     const referralId = req.params.id;
     const newStatus = req.body.status;
 
-    // Check valid status
     if (newStatus !== "Pending" && newStatus !== "Successful") {
       return res.status(400).json({
         message: "Invalid status. Use Pending or Successful.",
       });
     }
 
-    // Find referral
     const referral = await referralsCollection.findOne({
       referralId: referralId,
     });
@@ -242,7 +244,6 @@ app.patch("/api/referrals/:id", async (req, res) => {
       });
     }
 
-    // Update MongoDB
     await referralsCollection.updateOne(
       {
         referralId: referralId,
@@ -254,7 +255,6 @@ app.patch("/api/referrals/:id", async (req, res) => {
       }
     );
 
-    // Return updated referral
     const updatedReferral = {
       ...referral,
       status: newStatus,
@@ -270,16 +270,11 @@ app.patch("/api/referrals/:id", async (req, res) => {
   }
 });
 
-
-// ===============================
 // DELETE - Delete Referral
-// ===============================
-
 app.delete("/api/referrals/:id", async (req, res) => {
   try {
     const referralId = req.params.id;
 
-    // Find referral first
     const referral = await referralsCollection.findOne({
       referralId: referralId,
     });
@@ -290,7 +285,6 @@ app.delete("/api/referrals/:id", async (req, res) => {
       });
     }
 
-    // Delete from MongoDB
     await referralsCollection.deleteOne({
       referralId: referralId,
     });
@@ -308,7 +302,6 @@ app.delete("/api/referrals/:id", async (req, res) => {
   }
 });
 
-
 // ===============================
 // Server
 // ===============================
@@ -316,11 +309,16 @@ app.delete("/api/referrals/:id", async (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 async function startServer() {
-  await connectDB();
+  try {
+    await connectDB();
 
-  app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-  });
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
 }
 
 startServer();

@@ -1,3 +1,13 @@
 node_modules/
 .env
 *.log
+dist/
+
+.agents/
+.claude/
+.cursor/
+.devin/
+
+test-prisma.js
+notepad test-prisma.js
+prisma-8.md

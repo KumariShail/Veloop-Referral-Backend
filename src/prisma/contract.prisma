@@ -1,0 +1,193 @@
+// use prisma-8
+
+// ============================================
+// VELOOP REWARDS DATABASE CONTRACT
+// ============================================
+
+
+// ============================================
+// USER
+// ============================================
+
+model User {
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  name             String?
+  referralCode     String    @unique
+  referredByUserId Int?
+  deviceHash       String?
+  status           String    @default("ACTIVE")
+  passwordHash     String?
+
+  // Reward balances
+  sveBalance       Int       @default(0)
+  spinBalance      Int       @default(0)
+  tokenBalance     Int       @default(0)
+  gemBalance       Int       @default(0)
+  xp               Int       @default(0)
+
+  createdAt        TimestamptzString @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  referralsGiven   Referral[] @relation("Referrer")
+  referralsReceived Referral[] @relation("ReferredUser")
+
+  referredBy       User?      @relation("UserReferrer", fields: [referredByUserId], references: [id])
+  referredUsers    User[]     @relation("UserReferrer")
+
+  progress         ReferralProgress[]
+  adEvents         AdEvent[]
+  rewardTransactions RewardTransaction[]
+  auditLogs        AuditLog[] @relation("UserAuditLogs")
+}
+
+
+// ============================================
+// REFERRAL
+// ============================================
+
+model Referral {
+  id                Int       @id @default(autoincrement())
+
+  referrerId        Int
+  referredUserId    Int
+
+  referralCode      String
+  status            String    @default("PENDING")
+
+  attributedAt      TimestamptzString @default(now())
+  registeredAt      TimestamptzString?
+  successfulAt      TimestamptzString?
+
+  referrer          User      @relation("Referrer", fields: [referrerId], references: [id])
+  referredUser      User      @relation("ReferredUser", fields: [referredUserId], references: [id])
+
+  progress          ReferralProgress?
+  adEvents          AdEvent[]
+  rewardTransactions RewardTransaction[]
+  auditLogs         AuditLog[] @relation("ReferralAuditLogs")
+
+  @@unique([referredUserId])
+  @@index([referrerId])
+  @@index([status])
+}
+
+
+// ============================================
+// REFERRAL PROGRESS
+// ============================================
+
+model ReferralProgress {
+  id               Int       @id @default(autoincrement())
+
+  userId           Int
+  referralId       Int       @unique
+
+  adsCompleted     Int       @default(0)
+  currentMilestone Int       @default(0)
+
+  createdAt        TimestamptzString @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  user             User      @relation(fields: [userId], references: [id])
+  referral         Referral  @relation(fields: [referralId], references: [id])
+}
+
+
+// ============================================
+// AD EVENTS
+// ============================================
+
+model AdEvent {
+  id              Int       @id @default(autoincrement())
+
+  userId          Int
+  referralId      Int?
+
+  externalEventId String    @unique
+  adProvider      String
+  eventType       String
+
+  verified        Boolean   @default(false)
+
+  completedAt     TimestamptzString @default(now())
+  createdAt       TimestamptzString @default(now())
+
+  user            User      @relation(fields: [userId], references: [id])
+  referral        Referral? @relation(fields: [referralId], references: [id])
+
+  @@index([userId])
+  @@index([referralId])
+}
+
+
+// ============================================
+// REWARD TRANSACTION / LEDGER
+// ============================================
+
+model RewardTransaction {
+  id             Int       @id @default(autoincrement())
+
+  userId         Int
+  referralId     Int?
+
+  rewardType     String
+  amount         Int
+  reason         String
+  milestone      Int?
+
+  status         String    @default("CREDITED")
+  idempotencyKey String    @unique
+
+  createdAt      TimestamptzString @default(now())
+
+  user           User      @relation(fields: [userId], references: [id])
+  referral       Referral? @relation(fields: [referralId], references: [id])
+
+  @@index([userId])
+  @@index([referralId])
+  @@index([rewardType])
+}
+
+
+// ============================================
+// REWARD CONFIGURATION
+// ============================================
+
+model RewardConfig {
+  id           Int       @id @default(autoincrement())
+
+  milestone    Int       @unique
+  rewardType   String
+  rewardAmount Int
+
+  isActive     Boolean   @default(true)
+
+  createdAt    TimestamptzString @default(now())
+  updatedAt   temporal.updatedAtString()
+}
+
+
+// ============================================
+// AUDIT LOG
+// ============================================
+
+model AuditLog {
+  id         Int       @id @default(autoincrement())
+
+  userId     Int?
+  referralId Int?
+
+  action     String
+  status     String
+  details    String?
+
+  createdAt  TimestamptzString @default(now())
+
+  user       User?     @relation("UserAuditLogs", fields: [userId], references: [id])
+  referral   Referral? @relation("ReferralAuditLogs", fields: [referralId], references: [id])
+
+  @@index([userId])
+  @@index([referralId])
+  @@index([action])
+}
