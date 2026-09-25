@@ -613,5 +613,34 @@ router.patch(
     }
   }
 );
+router.get("/debug-data", authMiddleware, async (req, res) => {
+  try {
+    const database = await getDatabase();
+
+    const rewards =
+      await database.orm.public.RewardConfig.all();
+
+    const referrals =
+      await database.orm.public.Referral
+        .where((r) => r.referrerId.eq(Number(req.user.id)))
+        .all();
+
+    const progress =
+      await database.orm.public.ReferralProgress.all();
+
+    return res.json({
+      rewards,
+      referrals,
+      progress,
+    });
+  } catch (error) {
+    console.error("Debug data error:", error);
+
+    return res.status(500).json({
+      message: "Debug failed",
+      error: error.message,
+    });
+  }
+});
 
 module.exports = router;
