@@ -50,10 +50,6 @@ router.get("/me", authMiddleware, async (req, res) => {
       });
     }
 
-    // ----------------------------------------
-    // Get referrals belonging to this referrer
-    // ----------------------------------------
-
     const referrals =
       await database.orm.public.Referral
         .where((r) => r.referrerId.eq(userId))
@@ -80,19 +76,10 @@ router.get("/me", authMiddleware, async (req, res) => {
       (referral) => referral.status === "REGISTERED"
     ).length;
 
-    // ----------------------------------------
-    // Reward configuration
-    // ----------------------------------------
-
     const rewardConfigs =
       await database.orm.public.RewardConfig
         .where((r) => r.isActive.eq(true))
         .all();
-
-    // ----------------------------------------
-    // Get progress for referrals owned
-    // by this referrer
-    // ----------------------------------------
 
     const allProgress =
       await database.orm.public.ReferralProgress.all();
@@ -106,8 +93,6 @@ router.get("/me", authMiddleware, async (req, res) => {
         myReferralIds.has(Number(progress.referralId))
     );
 
-    // Use the referral with the highest Ad Watch progress
-    // for the dashboard's main progress indicator.
     const progress =
       myProgressRecords
         .sort(
@@ -165,10 +150,6 @@ router.get("/me", authMiddleware, async (req, res) => {
       };
     }
 
-    // ----------------------------------------
-    // Individual referral progress
-    // ----------------------------------------
-
     const referralProgressDetails = referrals.map(
       (referral) => {
         const progressRecord =
@@ -190,10 +171,6 @@ router.get("/me", authMiddleware, async (req, res) => {
         };
       }
     );
-
-    // ----------------------------------------
-    // Response
-    // ----------------------------------------
 
     return res.json({
       success: true,
@@ -613,19 +590,26 @@ router.patch(
     }
   }
 );
+
+// ======================================================
+// TEMPORARY DEBUG ROUTE
+// ======================================================
+
 router.get("/debug-data", authMiddleware, async (req, res) => {
   try {
     const database = await getDatabase();
 
     const users =
-    await database.orm.public.User.all();
+      await database.orm.public.User.all();
 
     const rewards =
-    await database.orm.public.RewardConfig.all();
+      await database.orm.public.RewardConfig.all();
 
     const referrals =
       await database.orm.public.Referral
-        .where((r) => r.referrerId.eq(Number(req.user.id)))
+        .where((r) =>
+          r.referrerId.eq(Number(req.user.id))
+        )
         .all();
 
     const progress =
@@ -646,12 +630,17 @@ router.get("/debug-data", authMiddleware, async (req, res) => {
     });
   }
 });
+
+// ======================================================
+// TEMPORARY DEMO SEED ROUTE
+// ======================================================
+
 router.post("/seed-demo", authMiddleware, async (req, res) => {
   try {
     const database = await getDatabase();
     const userId = Number(req.user.id);
 
-    // 1. Get logged-in user
+    // Get logged-in user
     const user = await database.orm.public.User
       .where((u) => u.id.eq(userId))
       .first();
@@ -663,7 +652,7 @@ router.post("/seed-demo", authMiddleware, async (req, res) => {
       });
     }
 
-    // 2. Update the existing Render user
+    // Update existing user
     await database.orm.public.User
       .where((u) => u.id.eq(userId))
       .update({
@@ -676,7 +665,7 @@ router.post("/seed-demo", authMiddleware, async (req, res) => {
         xp: 0,
       });
 
-    // 3. Create reward configurations if missing
+    // Reward configuration
     const rewardConfigs = [
       {
         milestone: 15,
@@ -718,13 +707,13 @@ router.post("/seed-demo", authMiddleware, async (req, res) => {
       }
     }
 
-    // 4. Check existing referrals
+    // Existing referrals
     const existingReferrals =
       await database.orm.public.Referral
         .where((r) => r.referrerId.eq(userId))
         .all();
 
-    // 5. Create 5 demo referrals only if none exist
+    // Create demo referrals
     if (existingReferrals.length === 0) {
       for (let i = 1; i <= 5; i++) {
         const referredUser =
@@ -770,3 +759,5 @@ router.post("/seed-demo", authMiddleware, async (req, res) => {
     });
   }
 });
+
+module.exports = router;
