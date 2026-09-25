@@ -651,7 +651,7 @@ router.post("/seed-demo", authMiddleware, async (req, res) => {
     const database = await getDatabase();
     const userId = Number(req.user.id);
 
-    // 1. Get the currently logged-in Render user
+    // 1. Get logged-in user
     const user = await database.orm.public.User
       .where((u) => u.id.eq(userId))
       .first();
@@ -663,10 +663,10 @@ router.post("/seed-demo", authMiddleware, async (req, res) => {
       });
     }
 
-    // 2. Make this account our demo referrer
-    await database.orm.public.User.update({
-      where: { id: userId },
-      data: {
+    // 2. Update the existing Render user
+    await database.orm.public.User
+      .where((u) => u.id.eq(userId))
+      .update({
         name: "Self Referral Test",
         referralCode: "REF1O638J17",
         sveBalance: 5000,
@@ -674,29 +674,46 @@ router.post("/seed-demo", authMiddleware, async (req, res) => {
         tokenBalance: 0,
         gemBalance: 0,
         xp: 0,
-      },
-    });
+      });
 
-    // 3. Create reward configuration if missing
+    // 3. Create reward configurations if missing
     const rewardConfigs = [
-      { milestone: 15, rewardType: "SVE", rewardAmount: 5000 },
-      { milestone: 20, rewardType: "SPINS", rewardAmount: 2 },
-      { milestone: 30, rewardType: "TOKENS", rewardAmount: 5000 },
-      { milestone: 35, rewardType: "GEMS", rewardAmount: 10 },
+      {
+        milestone: 15,
+        rewardType: "SVE",
+        rewardAmount: 5000,
+      },
+      {
+        milestone: 20,
+        rewardType: "SPINS",
+        rewardAmount: 2,
+      },
+      {
+        milestone: 30,
+        rewardType: "TOKENS",
+        rewardAmount: 5000,
+      },
+      {
+        milestone: 35,
+        rewardType: "GEMS",
+        rewardAmount: 10,
+      },
     ];
 
     for (const reward of rewardConfigs) {
       const existing =
         await database.orm.public.RewardConfig
-          .where((r) => r.milestone.eq(reward.milestone))
+          .where((r) =>
+            r.milestone.eq(reward.milestone)
+          )
           .first();
 
       if (!existing) {
         await database.orm.public.RewardConfig.create({
-          data: {
-            ...reward,
-            isActive: true,
-          },
+          milestone: reward.milestone,
+          rewardType: reward.rewardType,
+          rewardAmount: reward.rewardAmount,
+          isActive: true,
         });
       }
     }
@@ -707,38 +724,33 @@ router.post("/seed-demo", authMiddleware, async (req, res) => {
         .where((r) => r.referrerId.eq(userId))
         .all();
 
+    // 5. Create 5 demo referrals only if none exist
     if (existingReferrals.length === 0) {
       for (let i = 1; i <= 5; i++) {
         const referredUser =
           await database.orm.public.User.create({
-            data: {
-              name: `Demo Referral ${i}`,
-              email: `demo.referral.${i}@veloop.test`,
-              referralCode: `DEMOREF${Date.now()}${i}`,
-              referredByUserId: userId,
-              status: "ACTIVE",
-              passwordHash: null,
-            },
+            name: `Demo Referral ${i}`,
+            email: `demo.referral.${i}@veloop.test`,
+            referralCode: `DEMOREF${Date.now()}${i}`,
+            referredByUserId: userId,
+            status: "ACTIVE",
+            passwordHash: null,
           });
 
         const referral =
           await database.orm.public.Referral.create({
-            data: {
-              referrerId: userId,
-              referredUserId: referredUser.id,
-              referralCode: "REF1O638J17",
-              status: "REGISTERED",
-              registeredAt: new Date(),
-            },
+            referrerId: userId,
+            referredUserId: referredUser.id,
+            referralCode: "REF1O638J17",
+            status: "REGISTERED",
+            registeredAt: new Date(),
           });
 
         await database.orm.public.ReferralProgress.create({
-          data: {
-            userId: referredUser.id,
-            referralId: referral.id,
-            adsCompleted: 0,
-            currentMilestone: 0,
-          },
+          userId: referredUser.id,
+          referralId: referral.id,
+          adsCompleted: 0,
+          currentMilestone: 0,
         });
       }
     }
@@ -758,5 +770,3 @@ router.post("/seed-demo", authMiddleware, async (req, res) => {
     });
   }
 });
-
-module.exports = router;
