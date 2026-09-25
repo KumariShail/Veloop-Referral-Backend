@@ -617,8 +617,11 @@ router.get("/debug-data", authMiddleware, async (req, res) => {
   try {
     const database = await getDatabase();
 
+    const users =
+    await database.orm.public.User.all();
+
     const rewards =
-      await database.orm.public.RewardConfig.all();
+    await database.orm.public.RewardConfig.all();
 
     const referrals =
       await database.orm.public.Referral
@@ -629,6 +632,7 @@ router.get("/debug-data", authMiddleware, async (req, res) => {
       await database.orm.public.ReferralProgress.all();
 
     return res.json({
+      users,
       rewards,
       referrals,
       progress,
