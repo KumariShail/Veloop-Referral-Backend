@@ -27,9 +27,6 @@ app.use(
   })
 );
 
-// Handle CORS preflight requests
-app.options("*", cors());
-
 // Rate limiting
 app.use(apiRateLimiter);
 
