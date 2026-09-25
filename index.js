@@ -21,8 +21,10 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://veloop-referral-frontend-mnhs.vercel.app",
+      "https://veloop-referral-frontend.vercel.app",
     ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 

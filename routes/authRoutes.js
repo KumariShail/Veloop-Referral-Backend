@@ -41,7 +41,7 @@ router.post("/register", async (req, res) => {
   try {
     const database = await getDatabase();
 
-    const { email, password, name, deviceToken } = req.body;
+    const {email,password,name,deviceToken,referralCode: incomingReferralCode,} = req.body;
 
     // Validate input
     if (!email || !password) {
@@ -112,19 +112,59 @@ router.post("/register", async (req, res) => {
     // ==================================================
 
     const passwordHash = await bcrypt.hash(password, 12);
+    // ==================================================
+    // Referral handling
+    // ==================================================
+
+    let referrer = null;
+
+    if (incomingReferralCode) {
+      referrer = await database.orm.public.User
+        .where((user) => user.referralCode.eq(incomingReferralCode))
+        .first();
+
+      if (!referrer) {
+        return res.status(400).json({
+          success: false,
+          code: "INVALID_REFERRAL_CODE",
+          message: "Invalid referral code",
+        });
+      }
+    }
 
     // ==================================================
     // Create user
     // ==================================================
 
     const user = await database.orm.public.User.create({
-      email,
-      name: name || null,
-      referralCode,
-      passwordHash,
-      deviceHash,
-      status: "ACTIVE",
+    email,
+    name: name || null,
+    referralCode,
+    passwordHash,
+    deviceHash,
+    status: "ACTIVE",
+    referredByUserId: referrer ? referrer.id : null,
+  });
+    // ==================================================
+    // Create referral relationship
+    // ==================================================
+
+    if (referrer) {
+    const referral = await database.orm.public.Referral.create({
+      referrerId: referrer.id,
+      referredUserId: user.id,
+      referralCode: incomingReferralCode,
+      status: "REGISTERED",
+      registeredAt: new Date().toISOString(),
     });
+
+    await database.orm.public.ReferralProgress.create({
+      userId: user.id,
+      referralId: referral.id,
+      adsCompleted: 0,
+      currentMilestone: 0,
+    });
+  }
 
     // ==================================================
     // Response

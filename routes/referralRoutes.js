@@ -50,9 +50,14 @@ router.get("/me", authMiddleware, async (req, res) => {
       });
     }
 
-    const referrals = await database.orm.public.Referral
-      .where((r) => r.referrerId.eq(userId))
-      .all();
+    // ----------------------------------------
+    // Get referrals belonging to this referrer
+    // ----------------------------------------
+
+    const referrals =
+      await database.orm.public.Referral
+        .where((r) => r.referrerId.eq(userId))
+        .all();
 
     const totalReferrals = referrals.length;
 
@@ -71,41 +76,71 @@ router.get("/me", authMiddleware, async (req, res) => {
         referral.status === "REJECTED"
     ).length;
 
+    const registeredReferrals = referrals.filter(
+      (referral) => referral.status === "REGISTERED"
+    ).length;
+
     // ----------------------------------------
-    // Referral progress
+    // Reward configuration
     // ----------------------------------------
 
+    const rewardConfigs =
+      await database.orm.public.RewardConfig
+        .where((r) => r.isActive.eq(true))
+        .all();
+
+    // ----------------------------------------
+    // Get progress for referrals owned
+    // by this referrer
+    // ----------------------------------------
+
+    const allProgress =
+      await database.orm.public.ReferralProgress.all();
+
+    const myReferralIds = new Set(
+      referrals.map((referral) => Number(referral.id))
+    );
+
+    const myProgressRecords = allProgress.filter(
+      (progress) =>
+        myReferralIds.has(Number(progress.referralId))
+    );
+
+    // Use the referral with the highest Ad Watch progress
+    // for the dashboard's main progress indicator.
     const progress =
-      await database.orm.public.ReferralProgress
-        .where((p) => p.userId.eq(userId))
-        .first();
+      myProgressRecords
+        .sort(
+          (a, b) =>
+            Number(b.adsCompleted) -
+            Number(a.adsCompleted)
+        )[0] || null;
 
     let referralProgress = null;
 
     if (progress) {
-      const rewardConfigs =
-        await database.orm.public.RewardConfig
-          .where((r) => r.isActive.eq(true))
-          .all();
-
       const nextReward =
         rewardConfigs
           .filter(
             (reward) =>
-              progress.adsCompleted < reward.milestone
+              Number(progress.adsCompleted) <
+              Number(reward.milestone)
           )
           .sort(
-            (a, b) => a.milestone - b.milestone
+            (a, b) =>
+              Number(a.milestone) -
+              Number(b.milestone)
           )[0] || null;
 
+      const current = Number(progress.adsCompleted);
+
       const target = nextReward
-        ? nextReward.milestone
-        : progress.adsCompleted;
+        ? Number(nextReward.milestone)
+        : current;
 
       const remaining = nextReward
         ? Math.max(
-            nextReward.milestone -
-              progress.adsCompleted,
+            Number(nextReward.milestone) - current,
             0
           )
         : 0;
@@ -113,15 +148,14 @@ router.get("/me", authMiddleware, async (req, res) => {
       const percent =
         target > 0
           ? Math.min(
-              Math.round(
-                (progress.adsCompleted / target) * 100
-              ),
+              Math.round((current / target) * 100),
               100
             )
           : 100;
 
       referralProgress = {
-        current: progress.adsCompleted,
+        referralId: progress.referralId,
+        current,
         target,
         remaining,
         percent,
@@ -130,6 +164,36 @@ router.get("/me", authMiddleware, async (req, res) => {
           : "All milestones completed",
       };
     }
+
+    // ----------------------------------------
+    // Individual referral progress
+    // ----------------------------------------
+
+    const referralProgressDetails = referrals.map(
+      (referral) => {
+        const progressRecord =
+          myProgressRecords.find(
+            (progress) =>
+              Number(progress.referralId) ===
+              Number(referral.id)
+          );
+
+        return {
+          referralId: referral.id,
+          status: referral.status,
+          adsCompleted: progressRecord
+            ? Number(progressRecord.adsCompleted)
+            : 0,
+          currentMilestone: progressRecord
+            ? Number(progressRecord.currentMilestone)
+            : 0,
+        };
+      }
+    );
+
+    // ----------------------------------------
+    // Response
+    // ----------------------------------------
 
     return res.json({
       success: true,
@@ -148,6 +212,7 @@ router.get("/me", authMiddleware, async (req, res) => {
         totalReferrals,
         successfulReferrals,
         pendingReferrals,
+        registeredReferrals,
         spamReferrals,
       },
 
@@ -160,6 +225,10 @@ router.get("/me", authMiddleware, async (req, res) => {
       },
 
       referralProgress,
+
+      referralProgressDetails,
+
+      rewards: rewardConfigs,
 
       referrals,
     });
@@ -204,10 +273,6 @@ router.post(
         });
       }
 
-      // ----------------------------------------
-      // Find referrer
-      // ----------------------------------------
-
       const referrer =
         await database.orm.public.User
           .where((u) =>
@@ -222,10 +287,6 @@ router.post(
           message: "Invalid referral code",
         });
       }
-
-      // ----------------------------------------
-      // Prevent self-referral
-      // ----------------------------------------
 
       if (Number(referrer.id) === referredUserId) {
         await createAuditLog(database, {
@@ -244,10 +305,6 @@ router.post(
         });
       }
 
-      // ----------------------------------------
-      // Prevent duplicate referral
-      // ----------------------------------------
-
       const existingReferral =
         await database.orm.public.Referral
           .where((r) =>
@@ -263,10 +320,6 @@ router.post(
             "This user has already been attributed to a referral",
         });
       }
-
-      // ----------------------------------------
-      // Create referral + progress
-      // ----------------------------------------
 
       let referral;
       let progress;
@@ -439,7 +492,6 @@ router.patch(
         });
       }
 
-      // Only the referred user can complete registration
       if (
         Number(referral.referredUserId) !==
         currentUserId
@@ -451,10 +503,6 @@ router.patch(
             "You cannot register this referral",
         });
       }
-
-      // ----------------------------------------
-      // Idempotency
-      // ----------------------------------------
 
       if (
         referral.status === "SUCCESSFUL" ||
@@ -482,10 +530,6 @@ router.patch(
               registeredAt: new Date(),
               successfulAt: new Date(),
             });
-
-        // --------------------------------------
-        // Check whether XP was already credited
-        // --------------------------------------
 
         const existingTransaction =
           await tx.orm.public.RewardTransaction

@@ -39,6 +39,7 @@ router.get(
       const database = await getDatabase();
 
       const referralId = Number(req.params.referralId);
+      const loggedInUserId = Number(req.user.id);
 
       if (!Number.isInteger(referralId)) {
         return res.status(400).json({
@@ -49,7 +50,41 @@ router.get(
       }
 
       // ----------------------------------------
-      // 1. Find referral progress
+      // 1. Find the referral
+      // ----------------------------------------
+
+      const referral =
+        await database.orm.public.Referral
+          .where((r) => r.id.eq(referralId))
+          .first();
+
+      if (!referral) {
+        return res.status(404).json({
+          success: false,
+          code: "REFERRAL_NOT_FOUND",
+          message: "Referral not found",
+        });
+      }
+
+      // ----------------------------------------
+      // 2. Verify that the logged-in user
+      //    is the referrer / owner
+      // ----------------------------------------
+
+      if (
+        Number(referral.referrerId) !==
+        loggedInUserId
+      ) {
+        return res.status(403).json({
+          success: false,
+          code: "FORBIDDEN",
+          message:
+            "You are not allowed to access this referral",
+        });
+      }
+
+      // ----------------------------------------
+      // 3. Find referral progress
       // ----------------------------------------
 
       const progress =
@@ -66,20 +101,7 @@ router.get(
       }
 
       // ----------------------------------------
-      // 2. Ownership check
-      // ----------------------------------------
-
-      if (progress.userId !== req.user.id) {
-        return res.status(403).json({
-          success: false,
-          code: "FORBIDDEN",
-          message:
-            "You are not allowed to access this referral",
-        });
-      }
-
-      // ----------------------------------------
-      // 3. Get active reward configurations
+      // 4. Get active reward configurations
       // ----------------------------------------
 
       const rewardConfigs =
@@ -88,46 +110,61 @@ router.get(
           .all();
 
       // ----------------------------------------
-      // 4. Find unlocked rewards
+      // 5. Find unlocked rewards
       // ----------------------------------------
 
       const unlockedRewards = rewardConfigs
         .filter(
           (reward) =>
-            progress.adsCompleted >= reward.milestone
+            Number(progress.adsCompleted) >=
+            Number(reward.milestone)
         )
         .sort(
-          (a, b) => a.milestone - b.milestone
+          (a, b) =>
+            Number(a.milestone) -
+            Number(b.milestone)
         );
 
       // ----------------------------------------
-      // 5. Find next milestone
+      // 6. Find next milestone
       // ----------------------------------------
 
       const nextReward =
         rewardConfigs
           .filter(
             (reward) =>
-              progress.adsCompleted <
-              reward.milestone
+              Number(progress.adsCompleted) <
+              Number(reward.milestone)
           )
           .sort(
-            (a, b) => a.milestone - b.milestone
+            (a, b) =>
+              Number(a.milestone) -
+              Number(b.milestone)
           )[0] || null;
 
       return res.json({
         success: true,
         referralId,
-        adsCompleted: progress.adsCompleted,
+
+        adsCompleted:
+          Number(progress.adsCompleted),
+
         unlockedRewards,
+
         nextMilestone: nextReward
           ? {
-              milestone: nextReward.milestone,
-              rewardType: nextReward.rewardType,
-              rewardAmount: nextReward.rewardAmount,
+              milestone:
+                Number(nextReward.milestone),
+
+              rewardType:
+                nextReward.rewardType,
+
+              rewardAmount:
+                Number(nextReward.rewardAmount),
+
               remainingAds:
-                nextReward.milestone -
-                progress.adsCompleted,
+                Number(nextReward.milestone) -
+                Number(progress.adsCompleted),
             }
           : null,
       });
@@ -159,6 +196,7 @@ router.post(
       const database = await getDatabase();
 
       const referralId = Number(req.params.referralId);
+      const loggedInUserId = Number(req.user.id);
 
       if (!Number.isInteger(referralId)) {
         return res.status(400).json({
@@ -169,7 +207,40 @@ router.post(
       }
 
       // ----------------------------------------
-      // 1. Find referral progress
+      // 1. Find the referral
+      // ----------------------------------------
+
+      const referral =
+        await database.orm.public.Referral
+          .where((r) => r.id.eq(referralId))
+          .first();
+
+      if (!referral) {
+        return res.status(404).json({
+          success: false,
+          code: "REFERRAL_NOT_FOUND",
+          message: "Referral not found",
+        });
+      }
+
+      // ----------------------------------------
+      // 2. Verify ownership
+      // ----------------------------------------
+
+      if (
+        Number(referral.referrerId) !==
+        loggedInUserId
+      ) {
+        return res.status(403).json({
+          success: false,
+          code: "FORBIDDEN",
+          message:
+            "You are not allowed to claim rewards for this referral",
+        });
+      }
+
+      // ----------------------------------------
+      // 3. Find referral progress
       // ----------------------------------------
 
       const progress =
@@ -186,20 +257,7 @@ router.post(
       }
 
       // ----------------------------------------
-      // 2. Ownership check
-      // ----------------------------------------
-
-      if (progress.userId !== req.user.id) {
-        return res.status(403).json({
-          success: false,
-          code: "FORBIDDEN",
-          message:
-            "You are not allowed to claim rewards for this referral",
-        });
-      }
-
-      // ----------------------------------------
-      // 3. Get active reward configurations
+      // 4. Get active reward configurations
       // ----------------------------------------
 
       const rewardConfigs =
@@ -208,16 +266,19 @@ router.post(
           .all();
 
       // ----------------------------------------
-      // 4. Find all currently unlocked rewards
+      // 5. Find unlocked rewards
       // ----------------------------------------
 
       const unlockedRewards = rewardConfigs
         .filter(
           (reward) =>
-            progress.adsCompleted >= reward.milestone
+            Number(progress.adsCompleted) >=
+            Number(reward.milestone)
         )
         .sort(
-          (a, b) => a.milestone - b.milestone
+          (a, b) =>
+            Number(a.milestone) -
+            Number(b.milestone)
         );
 
       if (unlockedRewards.length === 0) {
@@ -226,7 +287,8 @@ router.post(
           code: "NO_REWARDS_AVAILABLE",
           message:
             "No rewards are available to claim yet",
-          adsCompleted: progress.adsCompleted,
+          adsCompleted:
+            Number(progress.adsCompleted),
         });
       }
 
@@ -234,7 +296,7 @@ router.post(
       const alreadyClaimed = [];
 
       // ----------------------------------------
-      // 5. Claim rewards transactionally
+      // 6. Claim rewards transactionally
       // ----------------------------------------
 
       await database.transaction(async (tx) => {
@@ -243,7 +305,7 @@ router.post(
             `REFERRAL-${referralId}-MILESTONE-${reward.milestone}-${reward.rewardType}`;
 
           // ----------------------------------------
-          // Check duplicate / previous claim
+          // Check previous claim
           // ----------------------------------------
 
           const existingTransaction =
@@ -292,13 +354,13 @@ router.post(
           }
 
           // ----------------------------------------
-          // Find user
+          // Find the REFERRER
           // ----------------------------------------
 
           const user =
             await tx.orm.public.User
               .where((u) =>
-                u.id.eq(progress.userId)
+                u.id.eq(loggedInUserId)
               )
               .first();
 
@@ -313,22 +375,29 @@ router.post(
           const rewardTransaction =
             await tx.orm.public.RewardTransaction
               .create({
-                userId: progress.userId,
+                userId: loggedInUserId,
+
                 referralId,
+
                 rewardType:
                   reward.rewardType,
+
                 amount:
                   reward.rewardAmount,
+
                 reason:
                   `Claimed referral milestone ${reward.milestone}`,
+
                 milestone:
                   reward.milestone,
+
                 status: "CREDITED",
+
                 idempotencyKey,
               });
 
           // ----------------------------------------
-          // Update user's balance
+          // Update referrer's balance
           // ----------------------------------------
 
           const currentBalance =
@@ -340,7 +409,7 @@ router.post(
 
           await tx.orm.public.User
             .where((u) =>
-              u.id.eq(progress.userId)
+              u.id.eq(loggedInUserId)
             )
             .update({
               [balanceField]: newBalance,
@@ -361,7 +430,7 @@ router.post(
           ].milestone;
 
         if (
-          highestMilestone >
+          Number(highestMilestone) >
           Number(progress.currentMilestone || 0)
         ) {
           await tx.orm.public.ReferralProgress
@@ -376,19 +445,24 @@ router.post(
       });
 
       // ----------------------------------------
-      // 6. Final response
+      // 7. Final response
       // ----------------------------------------
 
       return res.json({
         success: true,
+
         message:
           claimedRewards.length > 0
             ? "Rewards claimed successfully"
             : "All unlocked rewards were already claimed",
+
         referralId,
+
         adsCompleted:
-          progress.adsCompleted,
+          Number(progress.adsCompleted),
+
         claimedRewards,
+
         alreadyClaimed,
       });
     } catch (error) {
@@ -398,7 +472,8 @@ router.post(
       );
 
       if (
-        error?.message === "USER_NOT_FOUND"
+        error?.message ===
+        "USER_NOT_FOUND"
       ) {
         return res.status(404).json({
           success: false,
@@ -422,7 +497,8 @@ router.post(
       return res.status(500).json({
         success: false,
         code: "REWARD_CLAIM_FAILED",
-        message: "Failed to claim rewards",
+        message:
+          "Failed to claim rewards",
       });
     }
   }
